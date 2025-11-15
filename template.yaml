@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Serverless Image Processor for S3 uploads.
+
+Resources:
+  # 1. Lambda Function Definition
+  SelfieFilterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.12
+      CodeUri: .
+      MemorySize: 128
+      Timeout: 45
+      Environment:
+        Variables:
+          SOURCE_BUCKET_NAME: !Ref SourceBucket
+          DESTINATION_BUCKET_NAME: !Ref DestinationBucket
+      Policies:
+        # Grants permissions for CloudWatch logs
+        - AWSLambdaBasicExecutionRole 
+        # Custom IAM Policy - you'd define the S3/Rekognition/DynamoDB permissions here
+        # For simplicity, we assume a custom managed policy is attached, OR you define inline:
+        - Statement:
+            Effect: Allow
+            Action: [s3:GetObject, s3:PutObject, rekognition:DetectLabels, dynamodb:PutItem]
+            Resource: "*" # Best practice is to narrow these down!
+
+  # 2. S3 Bucket Trigger Configuration
+  SourceBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: your-upload-bucket-name-xyz # CHANGE NAME
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:*
+            Function: !GetAtt SelfieFilterFunction.Arn
+
+  # 3. Output Bucket
+  DestinationBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: your-filtered-bucket-name-xyz # CHANGE NAME

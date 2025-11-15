@@ -1,0 +1,14 @@
+# Python Dependencies and Cache
+__pycache__/
+*.pyc
+.mypy_cache/
+
+# Deployment Artifacts (usually created by SAM/Serverless Framework)
+.aws-sam/
+.serverless/
+artifacts/
+build/
+
+# Local Libraries (Do not commit libraries installed on your machine!)
+python/ 
+*.zip
